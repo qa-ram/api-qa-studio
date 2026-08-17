@@ -3,11 +3,11 @@ export function resolveVariables(str, variableScopes = {}) {
 
   const { globals = {}, environment = {}, collection = {}, local = {} } = variableScopes;
 
-  // Merge scopes: local > collection > environment > globals
+  // Merge scopes: local > environment > collection > globals
   const merged = {
     ...globals,
-    ...environment,
     ...collection,
+    ...environment,
     ...local
   };
 

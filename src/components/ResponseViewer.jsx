@@ -57,12 +57,12 @@ export default function ResponseViewer({ responseData }) {
       {/* Response Metrics Header */}
       <div className="px-4 py-2.5 bg-dark-900/80 border-b border-slate-800/80 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          {getStatusBadge()}
-          <div className="flex items-center space-x-1 text-xs text-slate-400 font-mono">
+          <div title="HTTP status code and response label for the latest request.">{getStatusBadge()}</div>
+          <div title={`Response time: ${time} milliseconds.`} className="flex items-center space-x-1 text-xs text-slate-400 font-mono">
             <Clock className="w-3.5 h-3.5 text-slate-500" />
             <span>{time} ms</span>
           </div>
-          <div className="flex items-center space-x-1 text-xs text-slate-400 font-mono">
+          <div title={`Response payload size: ${size} KB.`} className="flex items-center space-x-1 text-xs text-slate-400 font-mono">
             <Database className="w-3.5 h-3.5 text-slate-500" />
             <span>{size} KB</span>
           </div>
@@ -90,6 +90,7 @@ export default function ResponseViewer({ responseData }) {
         <div className="flex items-center space-x-1">
           <button
             onClick={() => setActiveTab('pretty')}
+            title="Pretty-print the response body in a readable JSON tree format."
             className={`px-3 py-2 font-medium border-b-2 transition-all flex items-center space-x-1.5 ${
               activeTab === 'pretty' ? 'border-brand-cyan text-brand-cyan' : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
@@ -99,6 +100,7 @@ export default function ResponseViewer({ responseData }) {
           </button>
           <button
             onClick={() => setActiveTab('raw')}
+            title="View the raw server response without pretty formatting."
             className={`px-3 py-2 font-medium border-b-2 transition-all ${
               activeTab === 'raw' ? 'border-brand-cyan text-brand-cyan' : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
@@ -107,6 +109,7 @@ export default function ResponseViewer({ responseData }) {
           </button>
           <button
             onClick={() => setActiveTab('headers')}
+            title="Inspect HTTP headers that were returned by the server."
             className={`px-3 py-2 font-medium border-b-2 transition-all ${
               activeTab === 'headers' ? 'border-brand-cyan text-brand-cyan' : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
@@ -115,6 +118,7 @@ export default function ResponseViewer({ responseData }) {
           </button>
           <button
             onClick={() => setActiveTab('tests')}
+            title="Review automated assertion results and any failures from the test script."
             className={`px-3 py-2 font-medium border-b-2 transition-all flex items-center space-x-1.5 ${
               activeTab === 'tests' ? 'border-brand-cyan text-brand-cyan' : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
@@ -124,6 +128,7 @@ export default function ResponseViewer({ responseData }) {
           </button>
           <button
             onClick={() => setActiveTab('visualizer')}
+            title="Visualize structured response data for easier debugging and analysis."
             className={`px-3 py-2 font-medium border-b-2 transition-all flex items-center space-x-1.5 ${
               activeTab === 'visualizer' ? 'border-brand-cyan text-brand-cyan' : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
@@ -136,6 +141,7 @@ export default function ResponseViewer({ responseData }) {
         {/* Copy Button */}
         <button
           onClick={handleCopy}
+          title="Copy the formatted response body to your clipboard."
           className="flex items-center space-x-1 px-2.5 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded transition-colors"
         >
           {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}

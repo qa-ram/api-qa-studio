@@ -14,8 +14,9 @@ export function executePreRequestScript(scriptArrayOrStr, context) {
   }
 
   const logs = [];
-  const localVars = { ...context.localVars };
-  const collectionVars = { ...context.collectionVars };
+  const localVars = { ...(context.localVars || {}) };
+  const collectionVars = { ...(context.collectionVars || {}) };
+  const environmentVars = { ...(context.environmentVars || {}) };
 
   // Copy headers array into dynamic header map
   const headersMap = new Map();
@@ -49,9 +50,13 @@ export function executePreRequestScript(scriptArrayOrStr, context) {
       set: (key, val) => { collectionVars[key] = val; }
     },
     variables: {
-      get: (key) => localVars[key] || collectionVars[key],
+      get: (key) => localVars[key] ?? environmentVars[key] ?? collectionVars[key],
       set: (key, val) => { localVars[key] = val; },
-      replaceIn: (str) => resolveVariables(str, { collection: collectionVars, local: localVars })
+      replaceIn: (str) => resolveVariables(str, {
+        collection: collectionVars,
+        environment: environmentVars,
+        local: localVars
+      })
     },
     request: {
       method: context.request.method || 'GET',

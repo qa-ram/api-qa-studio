@@ -18,11 +18,11 @@ export default function TopNav({
   isAiChatOpen
 }) {
   const protocols = [
-    { id: 'rest', label: 'REST API', icon: Globe },
-    { id: 'graphql', label: 'GraphQL', icon: Code },
-    { id: 'websocket', label: 'WebSocket', icon: Activity },
-    { id: 'socketio', label: 'Socket.IO', icon: Terminal },
-    { id: 'grpc', label: 'gRPC', icon: Cpu }
+    { id: 'rest', label: 'REST API', icon: Globe, description: 'Send HTTP requests and inspect JSON responses' },
+    { id: 'graphql', label: 'GraphQL', icon: Code, description: 'Query schemas and execute GraphQL operations' },
+    { id: 'websocket', label: 'WebSocket', icon: Activity, description: 'Monitor live streaming socket connections' },
+    { id: 'socketio', label: 'Socket.IO', icon: Terminal, description: 'Work with real-time Socket.IO event flows' },
+    { id: 'grpc', label: 'gRPC', icon: Cpu, description: 'Call typed RPC services and inspect metadata' }
   ];
 
   const envKeys = Object.keys(environments || {});
@@ -59,6 +59,7 @@ export default function TopNav({
               <button
                 key={p.id}
                 onClick={() => onSelectProtocol(p.id)}
+                title={`${p.label}: ${p.description}`}
                 className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
                   isActive
                     ? 'bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40 shadow-sm'
@@ -80,6 +81,7 @@ export default function TopNav({
           <Globe className="w-3.5 h-3.5 text-brand-cyan ml-1.5 shrink-0" />
           <select
             value={activeEnvId}
+            title={`Current environment: ${activeEnvId}. Switch to another runtime or manage variables.`}
             onChange={(e) => {
               if (e.target.value === '__NEW_ENV__') {
                 onOpenEnvironments();
@@ -111,6 +113,7 @@ export default function TopNav({
         {/* Collection Runner Button */}
         <button
           onClick={onOpenRunner}
+          title="Run a collection or folder against the active environment and review outcomes."
           className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-emerald-950/40 border border-emerald-400/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
           <Play className="w-3.5 h-3.5 fill-white" />
@@ -120,6 +123,7 @@ export default function TopNav({
         {/* ApexBot Postbot Chat Toggle */}
         <button
           onClick={onToggleAiChat}
+          title="Open ApexBot to get guidance on scripts, HMAC signing, testing patterns, and request setup."
           className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
             isAiChatOpen
               ? 'bg-brand-cyan text-dark-950 border-brand-cyan font-bold shadow-md shadow-brand-cyan/20'
@@ -133,6 +137,7 @@ export default function TopNav({
         {/* AI Postman Engineer */}
         <button
           onClick={onOpenAiEngineer}
+          title="Generate API tests and code examples for the selected request."
           className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg text-xs font-semibold transition-all"
         >
           <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
@@ -142,6 +147,7 @@ export default function TopNav({
         {/* AI Agent Builder */}
         <button
           onClick={onOpenAiAgentBuilder}
+          title="Design and configure an AI-driven workflow around your API requests."
           className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 rounded-lg text-xs font-semibold transition-all"
         >
           <Cpu className="w-3.5 h-3.5 text-purple-400" />

@@ -181,6 +181,7 @@ export default function RequestTab({
       <div className="p-3 border-b border-slate-800/80 flex items-center space-x-2 bg-dark-900/40">
         <select
           value={method}
+          title="Choose the HTTP method used for this request."
           onChange={(e) => updateMethod(e.target.value)}
           className="bg-dark-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs font-bold text-brand-cyan focus:outline-none focus:border-brand-cyan cursor-pointer uppercase shadow-sm"
         >
@@ -196,6 +197,7 @@ export default function RequestTab({
           <input
             type="text"
             value={rawUrl}
+            title="Request URL. Use variables like {{baseUrl}} and add query parameters as needed."
             onChange={(e) => updateUrl(e.target.value)}
             placeholder="Enter request URL (e.g. {{baseUrl}}/api/v1/reporting)"
             className="w-full font-mono text-xs bg-dark-900 border border-slate-700/80 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-cyan focus:ring-1 focus:ring-brand-cyan/50 transition-all shadow-inner"
@@ -225,6 +227,7 @@ export default function RequestTab({
       <div className="flex items-center px-3 border-b border-slate-800/80 bg-dark-900/40 text-xs">
         <button
           onClick={() => setActiveTab('params')}
+          title="View query string parameters that will be appended to the request URL."
           className={`px-3 py-2.5 font-medium border-b-2 transition-all ${
             activeTab === 'params'
               ? 'border-brand-cyan text-brand-cyan'
@@ -235,6 +238,7 @@ export default function RequestTab({
         </button>
         <button
           onClick={() => setActiveTab('headers')}
+          title="Manage custom HTTP headers such as Authorization, Content-Type, or Trace IDs."
           className={`px-3 py-2.5 font-medium border-b-2 transition-all flex items-center space-x-1.5 ${
             activeTab === 'headers'
               ? 'border-brand-cyan text-brand-cyan'
@@ -246,6 +250,7 @@ export default function RequestTab({
         </button>
         <button
           onClick={() => setActiveTab('body')}
+          title="Compose the request payload for JSON, form-data, or raw body requests."
           className={`px-3 py-2.5 font-medium border-b-2 transition-all flex items-center space-x-1.5 ${
             activeTab === 'body'
               ? 'border-brand-cyan text-brand-cyan'
@@ -257,6 +262,7 @@ export default function RequestTab({
         </button>
         <button
           onClick={() => setActiveTab('prerequest')}
+          title="Add script logic that runs before the request is sent, such as signing HMAC headers."
           className={`px-3 py-2.5 font-medium border-b-2 transition-all flex items-center space-x-1.5 ${
             activeTab === 'prerequest'
               ? 'border-brand-cyan text-brand-cyan'
@@ -269,6 +275,7 @@ export default function RequestTab({
         </button>
         <button
           onClick={() => setActiveTab('test')}
+          title="Write assertion scripts to validate HTTP status, payload fields, and business rules."
           className={`px-3 py-2.5 font-medium border-b-2 transition-all flex items-center space-x-1.5 ${
             activeTab === 'test'
               ? 'border-brand-cyan text-brand-cyan'

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import TopNav from './components/TopNav';
 import Sidebar from './components/Sidebar';
 import RequestTab from './components/RequestTab';
@@ -14,8 +14,43 @@ import { DEFAULT_COLLECTION } from './engine/defaultCollection';
 import { parsePostmanCollection } from './engine/postmanImporter';
 import { executePreRequestScript, executeTestScript } from './engine/scriptEngine';
 import { resolveVariables, parseHeaders } from './engine/variableResolver';
+import StorageManager from './engine/storageManager';
 
 export default function App() {
+  // Default environments - used as fallback if storage is empty
+  const DEFAULT_ENVIRONMENTS = {
+    'Local': {
+      name: 'Local',
+      vars: {
+        baseUrl: "http://localhost:5000",
+        hmacAppKey: "DEMO_APP_KEY_8812",
+        hmacSecret: "c2VjcmV0X2tleV9kZW1vXzEyMzQ1Njc4OTA=",
+        bulkJobId: "61a3b75c-b788-4173-aa07-a203ba21bbe7"
+      },
+      corsProxyUrl: "" // Optional: e.g., "https://cors-anywhere.herokuapp.com/"
+    },
+    'Staging': {
+      name: 'Staging',
+      vars: {
+        baseUrl: "https://api-qa.emgenex.dev",
+        hmacAppKey: "STAGING_APP_KEY_9901",
+        hmacSecret: "c3RhZ2luZ19zZWNyZXRfa2V5XzEyMzQ1",
+        bulkJobId: "job-staging-001"
+      },
+      corsProxyUrl: "" // Optional CORS proxy for browser requests
+    },
+    'Production': {
+      name: 'Production',
+      vars: {
+        baseUrl: "https://api.emgenex.com",
+        hmacAppKey: "PROD_APP_KEY_7741",
+        hmacSecret: "cHJvZF9zZWNyZXRfa2V5Xzk5ODg3Nw==",
+        bulkJobId: "job-prod-001"
+      },
+      corsProxyUrl: "" // Optional CORS proxy for browser requests
+    }
+  };
+
   const [collection, setCollection] = useState(DEFAULT_COLLECTION);
   
   // Flatten request helper
@@ -34,38 +69,22 @@ export default function App() {
   const [activeRequest, setActiveRequest] = useState(() => findFirstRequest(DEFAULT_COLLECTION.item));
   const [activeProtocol, setActiveProtocol] = useState('rest');
 
-  // Dynamic Multi-Environment Store
-  const [environments, setEnvironments] = useState({
-    'Local': {
-      name: 'Local',
-      vars: {
-        baseUrl: "http://localhost:5000",
-        hmacAppKey: "DEMO_APP_KEY_8812",
-        hmacSecret: "c2VjcmV0X2tleV9kZW1vXzEyMzQ1Njc4OTA=",
-        bulkJobId: "61a3b75c-b788-4173-aa07-a203ba21bbe7"
-      }
-    },
-    'Staging': {
-      name: 'Staging',
-      vars: {
-        baseUrl: "https://api-qa.emgenex.dev",
-        hmacAppKey: "STAGING_APP_KEY_9901",
-        hmacSecret: "c3RhZ2luZ19zZWNyZXRfa2V5XzEyMzQ1",
-        bulkJobId: "job-staging-001"
-      }
-    },
-    'Production': {
-      name: 'Production',
-      vars: {
-        baseUrl: "https://api.emgenex.com",
-        hmacAppKey: "PROD_APP_KEY_7741",
-        hmacSecret: "cHJvZF9zZWNyZXRfa2V5Xzk5ODg3Nw==",
-        bulkJobId: "job-prod-001"
-      }
-    }
-  });
+  // Load environments from storage or use defaults
+  const [environments, setEnvironments] = useState(() => 
+    StorageManager.loadEnvironments(DEFAULT_ENVIRONMENTS)
+  );
 
-  const [activeEnvId, setActiveEnvId] = useState('Local');
+  // Load active environment ID from storage or use 'Local'
+  const [activeEnvId, setActiveEnvIdState] = useState(() => 
+    StorageManager.loadActiveEnvironmentId('Local')
+  );
+
+  // Wrapper to save when activeEnvId changes
+  const setActiveEnvId = (envId) => {
+    setActiveEnvIdState(envId);
+    StorageManager.saveActiveEnvironmentId(envId);
+  };
+
   const activeEnvironmentVars = environments[activeEnvId]?.vars || {};
 
   const [responseState, setResponseState] = useState(null);
@@ -87,6 +106,22 @@ export default function App() {
   const [showAiEngineer, setShowAiEngineer] = useState(false);
   const [showAiAgentBuilder, setShowAiAgentBuilder] = useState(false);
   const [showAiChat, setShowAiChat] = useState(false);
+
+  // ============================================
+  // PERSISTENCE - Save environments to storage whenever they change
+  // ============================================
+  useEffect(() => {
+    StorageManager.saveEnvironments(environments);
+  }, [environments]);
+
+  // Log persistence info on app load
+  useEffect(() => {
+    console.log('🔄 APEX QA Studio - Data Persistence Enabled');
+    console.log('✓ Environments loaded from browser storage');
+    console.log('✓ Sensitive data encrypted (hmacSecret, apiKey, password, etc.)');
+    const stats = StorageManager.getStorageStats();
+    console.log('📊 Storage stats:', stats);
+  }, []); // Run only once on mount
 
   // Resizing Mouse Drag Handlers
   const handleMouseDownSidebar = (e) => {
@@ -356,6 +391,13 @@ export default function App() {
     let responseHeaders = { "content-type": "application/json; charset=utf-8" };
 
     try {
+      // Get CORS proxy URL from current environment if configured
+      const currentEnv = environments[activeEnvId];
+      const corsProxyUrl = currentEnv?.corsProxyUrl || '';
+      
+      // If CORS proxy is configured, use it to wrap the API URL
+      const finalUrl = corsProxyUrl ? corsProxyUrl + resolvedUrl : resolvedUrl;
+      
       const fetchOpts = {
         method,
         headers: resolvedHeadersMap
@@ -364,7 +406,7 @@ export default function App() {
         fetchOpts.body = resolvedBody;
       }
 
-      const res = await fetch(resolvedUrl, fetchOpts);
+      const res = await fetch(finalUrl, fetchOpts);
       httpStatus = res.status;
       httpStatusText = res.statusText;
       const text = await res.text();
@@ -374,52 +416,35 @@ export default function App() {
         responseData = text;
       }
     } catch (fetchErr) {
-      await new Promise(r => setTimeout(r, Math.max(80, Math.floor(Math.random() * 180))));
+      // Real network/CORS error - return error response instead of generic mock
+      httpStatus = 0;
+      httpStatusText = 'Network Error';
+      const isCorsError = fetchErr.message.includes('CORS') || fetchErr.message.includes('not allowed');
       
-      if (activeRequest.name.includes('Reporting')) {
-        httpStatus = 202;
-        httpStatusText = 'Accepted';
-        responseData = {
-          jobId: `61a3b75c-b788-4173-aa07-${Math.floor(Math.random() * 899999 + 100000)}`,
-          status: "QUEUED",
-          serviceType: 1,
-          panelName: "Emgenex_Panel_14",
-          environment: activeEnvId,
-          targetUrl: resolvedUrl,
-          message: "Bulk report job enqueued successfully."
-        };
-      } else if (activeRequest.name.includes('AddCurrentMedications')) {
-        httpStatus = 200;
-        httpStatusText = 'OK';
-        responseData = {
-          success: true,
-          specimenId: "DR08052601",
-          addedCount: 3,
-          environment: activeEnvId,
-          message: "Current medications updated for specimen."
-        };
-      } else if (activeRequest.name.includes('GetReports')) {
-        httpStatus = 200;
-        httpStatusText = 'OK';
-        responseData = {
-          success: true,
-          environment: activeEnvId,
-          data: [
-            { reportId: "REP-001", specimenId: "DR08052601S", patientName: "Test Patent1", status: "COMPLETED", date: "2026-05-03" }
+      responseData = {
+        error: true,
+        success: false,
+        message: `Failed to reach API${isCorsError ? ' (CORS Issue)' : ''}`,
+        details: {
+          requestUrl: resolvedUrl,
+          requestMethod: method,
+          errorType: fetchErr.name,
+          errorMessage: fetchErr.message,
+          timestamp: new Date().toISOString()
+        },
+        ...(isCorsError && {
+          corsHelp: [
+            "This appears to be a CORS (Cross-Origin Resource Sharing) error.",
+            "Your browser cannot directly access the external API due to security restrictions.",
+            "Solutions:",
+            "1. Enable CORS Proxy: Set 'corsProxyUrl' in Environment Variables (e.g., https://cors-anywhere.herokuapp.com/)",
+            "2. Run API requests through a backend server instead of the browser",
+            "3. Ask the API server admin to add your domain to the CORS whitelist",
+            "Note: Tools like Postman don't have these restrictions, which is why they work."
           ]
-        };
-      } else {
-        httpStatus = 200;
-        httpStatusText = 'OK';
-        responseData = {
-          success: true,
-          message: "LIS Direct Reporting API operational.",
-          environment: activeEnvId,
-          resolvedTargetUrl: resolvedUrl,
-          specimenId: "DR08052601S",
-          authenticatedKey: resolvedHeadersMap['X-App-Key'] || 'HMAC Validated'
-        };
-      }
+        })
+      };
+      console.error('Fetch error:', fetchErr);
     }
 
     const endTime = Date.now();

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Sliders, Plus, Trash2, X, Check, Copy, Upload, Download, Globe, Edit2
+  Sliders, Plus, Trash2, X, Check, Copy, Upload, Download, Globe, Edit2, HardDrive
 } from 'lucide-react';
 
 export default function EnvironmentModal({ 
@@ -175,13 +175,44 @@ export default function EnvironmentModal({
       ...envStore,
       [selectedEnvKey]: {
         name: envStore[selectedEnvKey]?.name || selectedEnvKey,
-        vars: varObj
+        vars: varObj,
+        corsProxyUrl: envStore[selectedEnvKey]?.corsProxyUrl || ''
       }
     };
 
     onSaveEnvironments(finalStore);
     onSelectActiveEnv(selectedEnvKey);
     onClose();
+  };
+
+  const handleExportEnvironments = () => {
+    // Commit current vars first
+    const varObj = {};
+    currentVars.forEach(v => {
+      if (v.key.trim()) {
+        varObj[v.key.trim()] = v.value;
+      }
+    });
+
+    const finalStore = {
+      ...envStore,
+      [selectedEnvKey]: {
+        name: envStore[selectedEnvKey]?.name || selectedEnvKey,
+        vars: varObj,
+        corsProxyUrl: envStore[selectedEnvKey]?.corsProxyUrl || ''
+      }
+    };
+
+    const jsonStr = JSON.stringify(finalStore, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `apex-environments-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -198,9 +229,27 @@ export default function EnvironmentModal({
               <p className="text-xs text-slate-400">Create, switch, and manage custom environments & key-value variables</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-slate-800 text-slate-400 rounded-lg">
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleExportEnvironments}
+              className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+              title="Export all environments as JSON backup"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <button onClick={onClose} className="p-1.5 hover:bg-slate-800 text-slate-400 rounded-lg">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Persistence Info Banner */}
+        <div className="px-5 py-3 bg-emerald-500/10 border-b border-emerald-500/30 flex items-start space-x-3">
+          <HardDrive className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-emerald-400">✓ Auto-Persistence Enabled</p>
+            <p className="text-[11px] text-emerald-300/80">Your environments and variables are automatically saved to browser storage. Sensitive data (hmacSecret, apiKey, password) is encrypted. Export a backup for safekeeping.</p>
+          </div>
         </div>
 
         {/* Body Split View */}
@@ -209,7 +258,7 @@ export default function EnvironmentModal({
           <div className="w-64 border-r border-slate-800/80 bg-dark-950/50 flex flex-col p-3 space-y-3 shrink-0">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-300 uppercase tracking-wide">Environments</span>
-              <label className="p-1 text-slate-400 hover:text-slate-200 cursor-pointer" title="Import Postman Environment JSON">
+              <label className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded cursor-pointer transition-colors" title="Import environment JSON (Postman or backup)">
                 <Upload className="w-3.5 h-3.5" />
                 <input type="file" accept=".json" onChange={handleImportEnvJson} className="hidden" />
               </label>
@@ -318,6 +367,27 @@ export default function EnvironmentModal({
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Variable</span>
               </button>
+            </div>
+
+            {/* CORS Proxy Configuration */}
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+              <label className="text-xs font-semibold text-amber-400 block mb-2">CORS Proxy URL (Optional)</label>
+              <p className="text-[11px] text-amber-300/80 mb-2">
+                If browser requests fail due to CORS, enter a proxy URL to relay requests (e.g., https://cors-anywhere.herokuapp.com/)
+              </p>
+              <input
+                type="text"
+                value={envStore[selectedEnvKey]?.corsProxyUrl || ''}
+                onChange={(e) => setEnvStore(prev => ({
+                  ...prev,
+                  [selectedEnvKey]: {
+                    ...prev[selectedEnvKey],
+                    corsProxyUrl: e.target.value
+                  }
+                }))}
+                placeholder="https://cors-anywhere.herokuapp.com/ (with trailing slash)"
+                className="w-full bg-dark-900 border border-amber-500/30 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500"
+              />
             </div>
 
             <div className="border border-slate-800 rounded-lg overflow-hidden bg-dark-950/80 text-xs">

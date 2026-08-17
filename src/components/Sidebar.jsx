@@ -117,7 +117,7 @@ export default function Sidebar({
         <button
           onClick={onToggleCollapse}
           className="p-2 hover:bg-slate-800 text-brand-cyan hover:text-white rounded-lg transition-colors"
-          title="Expand Collections Sidebar"
+          title="Expand the collections sidebar to browse requests and folders."
         >
           <PanelLeftOpen className="w-4 h-4" />
         </button>
@@ -127,12 +127,12 @@ export default function Sidebar({
         <button
           onClick={() => onAddRequest(null)}
           className="p-2 hover:bg-slate-800 text-slate-400 hover:text-brand-cyan rounded-lg transition-colors"
-          title="New Request"
+          title="Create a new request at the root of the collection."
         >
           <Plus className="w-4 h-4" />
         </button>
 
-        <label className="p-2 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-lg cursor-pointer transition-colors" title="Import Collection">
+        <label className="p-2 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-lg cursor-pointer transition-colors" title="Import a Postman collection to populate this QA workspace.">
           <Upload className="w-4 h-4" />
           <input 
             type="file" 
@@ -168,8 +168,9 @@ export default function Sidebar({
 
         return (
           <div key={item.id} className="mb-1">
-            <div 
+            <div
               onClick={() => toggleFolder(item.id)}
+              title={`Folder: ${item.name}. Contains ${item.item?.length || 0} child items. Click to expand or collapse.`}
               className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 cursor-pointer group transition-all text-xs font-medium relative"
             >
               <div className="flex items-center space-x-2 truncate min-w-0 flex-1">
@@ -237,6 +238,7 @@ export default function Sidebar({
         <div 
           key={item.id}
           onClick={() => onSelectRequest(item)}
+          title={`${item.name}: ${method} request to ${item.request?.url?.raw || 'custom endpoint'}. Click to open it in the request editor.`}
           className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer group transition-all text-xs ${
             isSelected 
               ? 'bg-brand-cyan/15 border border-brand-cyan/40 text-white font-medium shadow-sm' 
@@ -340,6 +342,7 @@ export default function Sidebar({
       <div className="p-2 border-t border-slate-800/80 bg-dark-950/50 flex items-center justify-between text-xs space-x-2">
         <button 
           onClick={() => onAddRequest(null)}
+          title="Add a new request to the root of the collection."
           className="flex-1 flex items-center justify-center space-x-1.5 py-1.5 px-2 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 hover:border-slate-600 rounded-lg text-slate-300 transition-all font-medium"
         >
           <Plus className="w-3.5 h-3.5 text-brand-cyan" />
@@ -348,7 +351,7 @@ export default function Sidebar({
         <button 
           onClick={() => onAddFolder(null)}
           className="flex items-center justify-center space-x-1 py-1.5 px-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg text-slate-400 hover:text-slate-200"
-          title="New Folder"
+          title="Create a new folder to group related requests."
         >
           <Folder className="w-3.5 h-3.5 text-amber-400" />
           <span>+ Folder</span>
